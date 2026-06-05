@@ -63,6 +63,9 @@ dependencies {
     // TensorFlow Lite
     implementation(libs.tensorflow.lite)
 
+    // WorkManager
+    implementation(libs.androidx.work.runtime.ktx)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
