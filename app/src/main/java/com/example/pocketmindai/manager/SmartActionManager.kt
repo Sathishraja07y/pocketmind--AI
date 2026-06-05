@@ -2,8 +2,11 @@ package com.example.pocketmindai.manager
 
 import android.app.NotificationManager
 import android.content.Context
+import android.content.Intent
 import android.media.AudioManager
 import android.util.Log
+import androidx.core.app.NotificationCompat
+import com.example.pocketmindai.R
 
 class SmartActionManager(private val context: Context) {
     private val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -11,6 +14,7 @@ class SmartActionManager(private val context: Context) {
 
     fun executeActionsForContext(predictedContext: String) {
         Log.d("SmartActionManager", "Executing actions for context: $predictedContext")
+        showNotification("PocketMind AI", "Adapting to $predictedContext mode")
         when (predictedContext.uppercase()) {
             "STUDY", "WORK" -> enableFocusMode()
             "GYM" -> enableGymMode()
@@ -18,6 +22,17 @@ class SmartActionManager(private val context: Context) {
             "HOME" -> enableHomeMode()
             else -> resetToNormalMode()
         }
+    }
+
+    private fun showNotification(title: String, message: String) {
+        val builder = NotificationCompat.Builder(context, "POCKETMIND_ACTIONS")
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentTitle(title)
+            .setContentText(message)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setAutoCancel(true)
+
+        notificationManager.notify(System.currentTimeMillis().toInt(), builder.build())
     }
 
     private fun enableFocusMode() {
@@ -30,9 +45,27 @@ class SmartActionManager(private val context: Context) {
     }
 
     private fun enableGymMode() {
-        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, (audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC) * 0.8).toInt(), 0)
-        // Intent to launch Spotify could go here
-        Log.d("SmartActionManager", "Gym Mode Enabled: Volume Increased")
+        // 1. Increase Volume
+        audioManager.setStreamVolume(
+            AudioManager.STREAM_MUSIC,
+            (audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC) * 0.8).toInt(),
+            0
+        )
+        
+        // 2. Launch Spotify automatically
+        launchApp("com.spotify.music")
+        
+        Log.d("SmartActionManager", "Gym Mode Enabled: Volume Increased & Spotify Launched")
+    }
+
+    private fun launchApp(packageName: String) {
+        val launchIntent = context.packageManager.getLaunchIntentForPackage(packageName)
+        if (launchIntent != null) {
+            launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(launchIntent)
+        } else {
+            Log.e("SmartActionManager", "Could not launch $packageName - App not installed")
+        }
     }
 
     private fun enableSleepMode() {

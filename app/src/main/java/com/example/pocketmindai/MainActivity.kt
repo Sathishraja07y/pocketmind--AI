@@ -118,6 +118,35 @@ fun MainDashboard() {
             }
 
             item {
+                Text("Manual Controls (Testing)", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            }
+
+            item {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(
+                        onClick = { 
+                            val actionManager = com.example.pocketmindai.manager.SmartActionManager(context)
+                            actionManager.executeActionsForContext("GYM")
+                        },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                    ) {
+                        Text("Simulate Gym", fontSize = 12.sp)
+                    }
+                    Button(
+                        onClick = { 
+                            val actionManager = com.example.pocketmindai.manager.SmartActionManager(context)
+                            actionManager.executeActionsForContext("WORK")
+                        },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                    ) {
+                        Text("Simulate Work", fontSize = 12.sp)
+                    }
+                }
+            }
+
+            item {
                 Text("Required Permissions", fontWeight = FontWeight.Bold, fontSize = 18.sp)
             }
 
