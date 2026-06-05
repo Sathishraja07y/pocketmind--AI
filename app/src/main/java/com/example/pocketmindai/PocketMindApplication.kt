@@ -5,22 +5,34 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.example.pocketmindai.worker.AppUsageWorker
+import com.example.pocketmindai.worker.DataCollectionWorker
 import java.util.concurrent.TimeUnit
 
 class PocketMindApplication : Application() {
     override fun onCreate() {
         super.onCreate()
-        scheduleAppUsageTracking()
+        scheduleBackgroundTasks()
     }
 
-    private fun scheduleAppUsageTracking() {
-        val workRequest = PeriodicWorkRequestBuilder<AppUsageWorker>(1, TimeUnit.HOURS)
-            .build()
+    private fun scheduleBackgroundTasks() {
+        val workManager = WorkManager.getInstance(this)
 
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+        // Task 1: App Usage Tracking
+        val usageRequest = PeriodicWorkRequestBuilder<AppUsageWorker>(1, TimeUnit.HOURS)
+            .build()
+        workManager.enqueueUniquePeriodicWork(
             "AppUsageTracking",
             ExistingPeriodicWorkPolicy.KEEP,
-            workRequest
+            usageRequest
+        )
+
+        // Task 2: Sensor Data Collection & Prediction Engine
+        val collectionRequest = PeriodicWorkRequestBuilder<DataCollectionWorker>(15, TimeUnit.MINUTES)
+            .build()
+        workManager.enqueueUniquePeriodicWork(
+            "DataCollectionAndPrediction",
+            ExistingPeriodicWorkPolicy.KEEP,
+            collectionRequest
         )
     }
 }

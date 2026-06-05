@@ -5,11 +5,23 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.pocketmindai.data.dao.AppUsageDao
-import com.example.pocketmindai.data.entity.AppUsageRecord
+import com.example.pocketmindai.data.dao.BehaviorDao
+import com.example.pocketmindai.data.entity.*
 
-@Database(entities = [AppUsageRecord::class], version = 1, exportSchema = false)
+@Database(
+    entities = [
+        AppUsageRecord::class,
+        BatteryRecord::class,
+        LocationRecord::class,
+        SensorRecord::class,
+        PredictionRecord::class
+    ],
+    version = 1,
+    exportSchema = false
+)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun appUsageDao(): AppUsageDao
+    abstract fun behaviorDao(): BehaviorDao
 
     companion object {
         @Volatile
