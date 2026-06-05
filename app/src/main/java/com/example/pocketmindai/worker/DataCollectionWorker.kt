@@ -8,9 +8,11 @@ import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.pocketmindai.data.AppDatabase
+import com.example.pocketmindai.data.entity.BatteryPrediction
 import com.example.pocketmindai.data.entity.BatteryRecord
 import com.example.pocketmindai.data.entity.PredictionRecord
 import com.example.pocketmindai.manager.SmartActionManager
+import kotlinx.coroutines.flow.first
 
 class DataCollectionWorker(appContext: Context, workerParams: WorkerParameters) :
     CoroutineWorker(appContext, workerParams) {
@@ -19,6 +21,9 @@ class DataCollectionWorker(appContext: Context, workerParams: WorkerParameters) 
         Log.d("DataCollectionWorker", "Running data collection and prediction engine")
         
         collectBatteryData()
+        
+        // Phase 8: Battery Prediction
+        predictBatteryLife()
         
         // Placeholder for AI Prediction (Phase 6)
         // In the future, this will use TensorFlow Lite to predict based on collected data
@@ -54,6 +59,26 @@ class DataCollectionWorker(appContext: Context, workerParams: WorkerParameters) 
         database.behaviorDao().insertBattery(
             BatteryRecord(percentage = batteryPct, isCharging = isCharging)
         )
+    }
+
+    private suspend fun predictBatteryLife() {
+        val database = AppDatabase.getDatabase(applicationContext)
+        val latestBattery = database.behaviorDao().getLatestBattery().first()
+        
+        if (latestBattery != null) {
+            // Simple logic for Phase 8: Predict based on current %
+            // Assuming average consumption of 5% per hour
+            val hoursRemaining = latestBattery.percentage / 5f
+            val nextChargeTime = System.currentTimeMillis() + (hoursRemaining * 3600000).toLong()
+            
+            database.behaviorDao().insertBatteryPrediction(
+                BatteryPrediction(
+                    predictedHoursRemaining = hoursRemaining,
+                    nextChargeTime = nextChargeTime
+                )
+            )
+            Log.d("DataCollectionWorker", "Battery prediction: $hoursRemaining hours left")
+        }
     }
 
     private fun runInference(): String {

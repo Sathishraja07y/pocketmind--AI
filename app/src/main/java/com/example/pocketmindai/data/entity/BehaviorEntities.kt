@@ -35,3 +35,11 @@ data class PredictionRecord(
     val confidence: Float,
     val timestamp: Long = System.currentTimeMillis()
 )
+
+@Entity(tableName = "battery_predictions")
+data class BatteryPrediction(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val predictedHoursRemaining: Float,
+    val nextChargeTime: Long,
+    val timestamp: Long = System.currentTimeMillis()
+)

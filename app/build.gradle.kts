@@ -64,6 +64,9 @@ dependencies {
     // TensorFlow Lite
     implementation(libs.tensorflow.lite)
 
+    // Analytics Charts
+    implementation(libs.mpandroidchart)
+
     // WorkManager
     implementation(libs.androidx.work.runtime.ktx)
 

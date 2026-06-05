@@ -20,8 +20,14 @@ interface BehaviorDao {
     @Insert
     suspend fun insertPrediction(record: PredictionRecord)
 
+    @Insert
+    suspend fun insertBatteryPrediction(record: BatteryPrediction)
+
     @Query("SELECT * FROM battery_history ORDER BY timestamp DESC LIMIT 1")
     fun getLatestBattery(): Flow<BatteryRecord?>
+
+    @Query("SELECT * FROM battery_predictions ORDER BY timestamp DESC LIMIT 1")
+    fun getLatestBatteryPrediction(): Flow<BatteryPrediction?>
 
     @Query("SELECT predictedContext FROM predictions ORDER BY timestamp DESC LIMIT 1")
     fun getLatestPrediction(): Flow<String?>

@@ -30,6 +30,16 @@ import com.example.pocketmindai.data.AppDatabase
 import com.example.pocketmindai.ui.theme.PocketMindAITheme
 import kotlinx.coroutines.flow.map
 
+import androidx.compose.ui.viewinterop.AndroidView
+import com.github.mikephil.charting.charts.LineChart
+import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.data.LineDataSet
+import com.example.pocketmindai.data.entity.BatteryRecord
+import com.example.pocketmindai.data.entity.BatteryPrediction
+import java.text.SimpleDateFormat
+import java.util.*
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,6 +59,8 @@ fun MainDashboard() {
     val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     
     val batteryRecord by database.behaviorDao().getLatestBattery().collectAsState(initial = null)
+    val batteryPrediction by database.behaviorDao().getLatestBatteryPrediction().collectAsState(initial = null)
+    val allBatteryRecords by database.behaviorDao().getAllBattery().collectAsState(initial = emptyList())
     val currentContext by database.behaviorDao().getLatestPrediction().collectAsState(initial = "Learning...")
 
     var hasLocationPermission by remember {
@@ -80,6 +92,18 @@ fun MainDashboard() {
                     containerColor = MaterialTheme.colorScheme.primaryContainer
                 )
             )
+        },
+        floatingActionButton = {
+            FloatingActionButton(onClick = {
+                // Phase 10: Simple Voice Assistant Trigger
+                val intent = Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                    putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                    putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, "How can PocketMind AI help you?")
+                }
+                context.startActivity(intent)
+            }) {
+                Icon(Icons.Default.Mic, contentDescription = "Voice Assistant")
+            }
         }
     ) { padding ->
         LazyColumn(
@@ -115,6 +139,26 @@ fun MainDashboard() {
                         color = MaterialTheme.colorScheme.tertiary
                     )
                 }
+            }
+
+            item {
+                Text("AI Insights", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            }
+
+            item {
+                ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text("Battery Prediction", fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("Remaining: ${String.format("%.1f", batteryPrediction?.predictedHoursRemaining ?: 0f)} hours")
+                        Text("Next Charge: ${batteryPrediction?.nextChargeTime?.let { SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date(it)) } ?: "Calculating..."}")
+                    }
+                }
+            }
+
+            item {
+                Text("Battery Trends", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                BatteryChart(allBatteryRecords)
             }
 
             item {
@@ -202,6 +246,38 @@ fun StatusCard(
             Text(value, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         }
     }
+}
+
+@Composable
+fun BatteryChart(records: List<BatteryRecord>) {
+    val entries = records.take(10).reversed().mapIndexed { index, record ->
+        Entry(index.toFloat(), record.percentage.toFloat())
+    }
+
+    AndroidView(
+        factory = { context ->
+            LineChart(context).apply {
+                description.isEnabled = false
+                legend.isEnabled = false
+                xAxis.setDrawGridLines(false)
+                axisLeft.setDrawGridLines(false)
+                axisRight.isEnabled = false
+            }
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(200.dp),
+        update = { chart ->
+            val dataSet = LineDataSet(entries, "Battery level").apply {
+                color = android.graphics.Color.BLUE
+                setCircleColor(android.graphics.Color.BLUE)
+                lineWidth = 2f
+                setDrawValues(false)
+            }
+            chart.data = LineData(dataSet)
+            chart.invalidate()
+        }
+    )
 }
 
 @Composable
